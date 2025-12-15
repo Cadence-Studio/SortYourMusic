@@ -1106,14 +1106,16 @@ $(document).ready(
         songTable = initTable();
         var args = parseArgs();
 
+        // Always show the login button and attach the handler once
+        $("#go").show();
+        $("#go").off('click').on('click', async function(event) {
+            event.preventDefault();
+            console.log("Login with Spotify button clicked", args);
+            await authorizeUser();
+        });
+
         if ('error' in args) {
             error("Sorry, I can't read your playlists from Spotify without authorization");
-            $("#go").show();
-            $("#go").off('click').on('click', async function(event) {
-                console.log("click login error", args['error']);
-                event.preventDefault();
-                await authorizeUser();
-            });
         } else if ('access_token' in args) {
             accessToken = args['access_token'];
             $(".worker").hide();
@@ -1129,13 +1131,6 @@ $(document).ready(
         } else if ('code' in args) {
             // PKCE: exchange code for access token
             await exchangeCodeForToken(args['code']);
-        } else {
-            $("#go").show();
-            $("#go").off('click').on('click', async function(event) {
-                console.log("click login");
-                event.preventDefault();
-                await authorizeUser();
-            });
         }
 
         $("#save,#dropSave").on('click', function() {
