@@ -310,7 +310,9 @@ function authorizeUser() {
         '&response_type=token' +
         '&scope=' + encodeURIComponent(scopes) +
         '&redirect_uri=' + encodeURIComponent(SPOTIFY_REDIRECT_URI);
-    document.location = url;
+    
+    console.log("url", url)
+        // document.location = url;
 }
 
 function parseArgs() {
