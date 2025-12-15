@@ -1,6 +1,4 @@
 "use strict";
 
-var SPOTIFY_CLIENT_ID = '31469b011d4941bf8dd4ac9cf8495bac';
-var SPOTIFY_REDIRECT_URI = 'http://localhost:8000/';
-var SPOTIFY_REDIRECT_URI = 'http://sortyourmusic.playlistmachinery.com/';
-
+var SPOTIFY_CLIENT_ID = '73ab9fad9b594bfb9e5e63e9b7822358';
+var SPOTIFY_REDIRECT_URI = 'https://Cadence-Studio.github.io/SortYourMusic/';
