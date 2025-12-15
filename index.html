@@ -1110,7 +1110,7 @@ $(document).ready(
             error("Sorry, I can't read your playlists from Spotify without authorization");
             $("#go").show();
             $("#go").off('click').on('click', async function(event) {
-                console.log("click login");
+                console.log("click login error", args['error']);
                 event.preventDefault();
                 await authorizeUser();
             });
@@ -1132,6 +1132,7 @@ $(document).ready(
         } else {
             $("#go").show();
             $("#go").off('click').on('click', async function(event) {
+                console.log("click login");
                 event.preventDefault();
                 await authorizeUser();
             });
