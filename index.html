@@ -1106,12 +1106,16 @@ $(document).ready(
         songTable = initTable();
         var args = parseArgs();
 
-        // Always show the login button and attach the handler once
-        $("#go").show();
-        $("#go").off('click').on('click', async function(event) {
-            event.preventDefault();
-            console.log("Login with Spotify button clicked", args);
-            await authorizeUser();
+        // Attach handler after DOM is ready and ensure element is present
+        $(function() {
+            var $go = $("#go");
+            $go.show();
+            $go.off('click').on('click', function(event) {
+                event.preventDefault();
+                console.log("Login with Spotify button clicked", args, this);
+                // Call authorizeUser, but not as async handler to avoid jQuery issues
+                authorizeUser();
+            });
         });
 
         if ('error' in args) {
