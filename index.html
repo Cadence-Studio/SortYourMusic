@@ -1109,7 +1109,9 @@ $(document).ready(
         if ('error' in args) {
             error("Sorry, I can't read your playlists from Spotify without authorization");
             $("#go").show();
-            $("#go").off('click').on('click', async function() {
+            $("#go").off('click').on('click', async function(event) {
+                console.log("click login");
+                event.preventDefault();
                 await authorizeUser();
             });
         } else if ('access_token' in args) {
@@ -1129,7 +1131,8 @@ $(document).ready(
             await exchangeCodeForToken(args['code']);
         } else {
             $("#go").show();
-            $("#go").off('click').on('click', async function() {
+            $("#go").off('click').on('click', async function(event) {
+                event.preventDefault();
                 await authorizeUser();
             });
         }
