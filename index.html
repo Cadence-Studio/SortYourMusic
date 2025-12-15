@@ -370,8 +370,9 @@ function callSpotifyP(type, url, json) {
             beforeSend: function () { console.log(type + ": " + this.url); },
             success: function(data) { resolve(data); },
             error: function(jqXHR, textStatus) {
-                if (jqXHR.status >= 200 && jqXHR.status < 300) resolve(undefined);
-                else reject(textStatus);
+                const status = (jqXHR && typeof jqXHR.status === 'number') ? jqXHR.status : 'unknown';
+                const body = (jqXHR && jqXHR.responseText) ? jqXHR.responseText : '';
+                reject(`HTTP ${status} ${textStatus}${body ? " — " + body : ""}`);
             }
         });
     });
@@ -395,8 +396,10 @@ function getSpotifyP(url, data) {
             headers: { 'Authorization': 'Bearer ' + accessToken },
             success: function(data) { resolve(data); },
             error: function(jqXHR, textStatus) {
-                if (jqXHR.status >= 200 && jqXHR.status < 300) resolve(undefined);
-                else reject(textStatus);
+                // Provide useful debug info instead of just "error"
+                const status = (jqXHR && typeof jqXHR.status === 'number') ? jqXHR.status : 'unknown';
+                const body = (jqXHR && jqXHR.responseText) ? jqXHR.responseText : '';
+                reject(`HTTP ${status} ${textStatus}${body ? " — " + body : ""}`);
             }
         });
     });
@@ -697,7 +700,7 @@ function fetchPlaylistTracks(playlist) {
         });
     }
 
-    var startUrl = "https://api.spotify.com/v1/playlists/" + playlist.id + "/tracks?limit=50";
+    var startUrl = (playlist && playlist.tracks && playlist.tracks.href) ? (playlist.tracks.href + (playlist.tracks.href.includes("?") ? "&" : "?") + "limit=50") : ("https://api.spotify.com/v1/playlists/" + playlist.id + "/tracks?limit=50");
     return fetchLoop(startUrl);
 }
 
