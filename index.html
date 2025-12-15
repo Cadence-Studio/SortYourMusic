@@ -418,7 +418,7 @@ function fetchPlaylists(uid, callback) {
     $(".spinner").show();
 
     info("Getting your playlists");
-    var url = 'https://api.spotify.com/v1/users/' + uid + '/playlists';
+    var url = 'https://api.spotify.com/v1/me/playlists';
     var data = { limit:50, offset:0 };
     getSpotify(url, data, callback);
 }
@@ -697,8 +697,7 @@ function fetchPlaylistTracks(playlist) {
         });
     }
 
-    var startUrl = "https://api.spotify.com/v1/users/" + playlist.owner.id +
-        "/playlists/" + playlist.id + "/tracks?limit=50";
+    var startUrl = "https://api.spotify.com/v1/playlists/" + playlist.id + "/tracks?limit=50";
     return fetchLoop(startUrl);
 }
 
@@ -783,7 +782,7 @@ function saveTidsToPlaylist(playlist, tids, replace) {
             return Promise.reject("Trouble saving tracks to the playlist");
         });
     } else {
-        return callSpotifyP('POST', url, this_tids)
+        return callSpotifyP('POST', url, { 'uris': this_tids })
         .then(function() {
             if (remaining.length > 0) return saveTidsToPlaylist(playlist, remaining, false);
         })
