@@ -1108,19 +1108,19 @@ $(document).ready(
 
         // Attach handler after DOM is ready and ensure element is present
         // Use a direct DOMContentLoaded event to guarantee handler is attached after all HTML is parsed
-        document.addEventListener("DOMContentLoaded", function() {
-            var goBtn = document.getElementById("go");
-            if (goBtn) {
-                goBtn.style.display = "";
-                goBtn.onclick = function(event) {
-                    event.preventDefault();
-                    console.log("Login with Spotify button clicked", args, this);
-                    authorizeUser();
-                };
-            } else {
-                console.log("No #go element found in DOM");
-            }
-        });
+        
+        var goBtn = document.getElementById("go");
+        if (goBtn) {
+            goBtn.style.display = "";
+            goBtn.onclick = function(event) {
+                event.preventDefault();
+                console.log("Login with Spotify button clicked", args, this);
+                authorizeUser();
+            };
+        } else {
+            console.log("No #go element found in DOM");
+        }
+        
 
         if ('error' in args) {
             error("Sorry, I can't read your playlists from Spotify without authorization");
