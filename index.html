@@ -1109,8 +1109,8 @@ $(document).ready(
         if ('error' in args) {
             error("Sorry, I can't read your playlists from Spotify without authorization");
             $("#go").show();
-            $("#go").on('click', function() {
-                authorizeUser();
+            $("#go").off('click').on('click', async function() {
+                await authorizeUser();
             });
         } else if ('access_token' in args) {
             accessToken = args['access_token'];
@@ -1129,8 +1129,8 @@ $(document).ready(
             await exchangeCodeForToken(args['code']);
         } else {
             $("#go").show();
-            $("#go").on('click', function() {
-                authorizeUser();
+            $("#go").off('click').on('click', async function() {
+                await authorizeUser();
             });
         }
 
