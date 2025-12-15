@@ -303,28 +303,109 @@ function info(msg) {
     $("#info").text(msg);
 }
 
-function authorizeUser() {
+function base64urlencode(a) {
+    // base64url encode array buffer
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(a)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function generateCodeVerifier() {
+    // 128 random bytes, base64url encoded
+    const array = new Uint8Array(64);
+    window.crypto.getRandomValues(array);
+    return base64urlencode(array);
+}
+
+async function generateCodeChallenge(code_verifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(code_verifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return base64urlencode(digest);
+}
+
+async function authorizeUser() {
+    if (typeof SPOTIFY_CLIENT_ID === 'undefined' || !SPOTIFY_CLIENT_ID) {
+        error("SPOTIFY_CLIENT_ID is not set. Please set it in config.js.");
+        return;
+    }
+    if (typeof SPOTIFY_REDIRECT_URI === 'undefined' || !SPOTIFY_REDIRECT_URI) {
+        error("SPOTIFY_REDIRECT_URI is not set. Please set it in config.js.");
+        return;
+    }
     var scopes = 'playlist-read-private playlist-modify-private playlist-modify-public';
 
-    var url = 'https://accounts.spotify.com/authorize?client_id=' + SPOTIFY_CLIENT_ID +
-        '&response_type=token' +
+    const code_verifier = generateCodeVerifier();
+    const code_challenge = await generateCodeChallenge(code_verifier);
+
+    // Save code_verifier in localStorage for later token exchange
+    localStorage.setItem('spotify_code_verifier', code_verifier);
+
+    var url = 'https://accounts.spotify.com/authorize' +
+        '?client_id=' + encodeURIComponent(SPOTIFY_CLIENT_ID) +
+        '&response_type=code' +
+        '&redirect_uri=' + encodeURIComponent(SPOTIFY_REDIRECT_URI) +
         '&scope=' + encodeURIComponent(scopes) +
-        '&redirect_uri=' + encodeURIComponent(SPOTIFY_REDIRECT_URI);
-    
-    console.log("url", url)
+        '&code_challenge_method=S256' +
+        '&code_challenge=' + encodeURIComponent(code_challenge);
+
     document.location = url;
 }
 
+async function exchangeCodeForToken(code) {
+    const code_verifier = localStorage.getItem('spotify_code_verifier');
+    if (!code_verifier) {
+        error("Missing PKCE code_verifier.");
+        return;
+    }
+    const params = new URLSearchParams();
+    params.append('client_id', SPOTIFY_CLIENT_ID);
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', SPOTIFY_REDIRECT_URI);
+    params.append('code_verifier', code_verifier);
+
+    try {
+        const response = await fetch('https://accounts.spotify.com/api/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+        });
+        if (!response.ok) {
+            error("Failed to exchange code for token");
+            return;
+        }
+        const data = await response.json();
+        accessToken = data.access_token;
+        // Optionally: store refresh_token if you want to refresh tokens later
+        localStorage.removeItem('spotify_code_verifier');
+        $(".worker").hide();
+        fetchCurrentUserProfile(function(user) {
+            if (user) {
+                curUserID = user.id;
+                $("#who").text(user.id);
+                loadPlaylists(user.id);
+            } else {
+                error("Trouble getting the user profile");
+            }
+        });
+    } catch (e) {
+        error("Token exchange error: " + e);
+    }
+}
+
 function parseArgs() {
-    var hash = location.hash.replace(/#/g, '');
-    var all = hash.split('&');
-    var args = {};
-    _.each(all, function(keyvalue) {
-        var kv = keyvalue.split('=');
-        var key = kv[0];
-        var val = kv[1];
-        args[key] = val;
-    });
+    // Support both hash and query string for code
+    let args = {};
+    let query = location.search.substring(1);
+    let hash = location.hash.replace(/^#/, '');
+    function parse(str) {
+        str.split('&').forEach(function(kv) {
+            let [k, v] = kv.split('=');
+            if (k) args[k] = v;
+        });
+    }
+    if (query) parse(query);
+    if (hash) parse(hash);
     return args;
 }
 
@@ -1021,11 +1102,9 @@ function initTable() {
 }
 
 $(document).ready(
-
-    function() {
+    async function() {
         songTable = initTable();
         var args = parseArgs();
-
 
         if ('error' in args) {
             error("Sorry, I can't read your playlists from Spotify without authorization");
@@ -1045,6 +1124,9 @@ $(document).ready(
                     error("Trouble getting the user profile");
                 }
             });
+        } else if ('code' in args) {
+            // PKCE: exchange code for access token
+            await exchangeCodeForToken(args['code']);
         } else {
             $("#go").show();
             $("#go").on('click', function() {
