@@ -347,7 +347,7 @@ async function authorizeUser() {
         '&scope=' + encodeURIComponent(scopes) +
         '&code_challenge_method=S256' +
         '&code_challenge=' + encodeURIComponent(code_challenge);
-
+console.log("AUTHORIZE URL:", url);
     document.location = url;
 }
 
@@ -1110,6 +1110,7 @@ $(document).ready(
         // Use a direct DOMContentLoaded event to guarantee handler is attached after all HTML is parsed
         
         var goBtn = document.getElementById("go");
+        console.log("Login button found:", goBtn);
         if (goBtn) {
             goBtn.style.display = "";
             goBtn.onclick = function(event) {
